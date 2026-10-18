@@ -1,0 +1,805 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Piforge Webshop</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Instrument+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: sticky header, hero with terminal card, shop grid with filters, cart drawer and checkout as layers over the page */
+:root {
+  --bg: #0e1210; --surface: #161b18; --surface-2: #1e2521; --line: #2a322d;
+  --fg: #ecebe6; --muted: #9ba49d; --accent: #3ddc84; --accent-ink: #06210f;
+  --accent-text: #3ddc84; --danger: #ff7a6e; --warn: #f2b84b; --board: #1b3a2a; --board-line: #2f6b4a;
+  --overlay: rgba(4, 8, 6, .66);
+  --font-display: "Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --font-body: "Instrument Sans", "Segoe UI", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  --fs-s: .8125rem; --fs-b: 1rem; --fs-l: 1.25rem; --fs-xl: clamp(1.6rem, 1.2rem + 1.6vw, 2.25rem); --fs-hero: clamp(2.3rem, 1.4rem + 4vw, 4.2rem);
+  --r-s: 8px; --r-m: 14px; --r-l: 22px;
+  --shadow: 0 18px 50px rgba(0, 0, 0, .45);
+  color-scheme: dark;
+}
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) {
+    --bg: #f2f4f0; --surface: #ffffff; --surface-2: #e8ece5; --line: #d3d9d0;
+    --fg: #14201a; --muted: #55625a; --accent: #14a85c; --accent-ink: #ffffff;
+    --accent-text: #0b7a41; --danger: #c43a2c; --warn: #8a5a00; --board: #d7efe0; --board-line: #3f9a66;
+    --overlay: rgba(20, 32, 26, .5); --shadow: 0 18px 50px rgba(20, 32, 26, .18); color-scheme: light;
+  }
+}
+:root[data-theme="light"] {
+  --bg: #f2f4f0; --surface: #ffffff; --surface-2: #e8ece5; --line: #d3d9d0;
+  --fg: #14201a; --muted: #55625a; --accent: #14a85c; --accent-ink: #ffffff;
+  --accent-text: #0b7a41; --danger: #c43a2c; --warn: #8a5a00; --board: #d7efe0; --board-line: #3f9a66;
+  --overlay: rgba(20, 32, 26, .5); --shadow: 0 18px 50px rgba(20, 32, 26, .18); color-scheme: light;
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; scroll-padding-top: 5rem; }
+body {
+  background: var(--bg); color: var(--fg); font-family: var(--font-body); font-size: var(--fs-b); line-height: 1.55;
+  padding-block: 0; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 60; background: var(--bg); }
+h1, h2, h3 { font-family: var(--font-display); line-height: 1.08; margin: 0; text-wrap: balance; letter-spacing: -.01em; }
+h1 { font-size: var(--fs-hero); font-weight: 800; }
+h2 { font-size: var(--fs-xl); font-weight: 800; }
+h3 { font-size: var(--fs-l); font-weight: 600; }
+p { margin: 0; }
+a { color: inherit; }
+button, input, select, textarea { font: inherit; color: inherit; }
+button { cursor: pointer; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
+.wrap { max-width: 1160px; margin-inline: auto; }
+.eyebrow { font-family: var(--font-mono); font-size: var(--fs-s); letter-spacing: .08em; text-transform: uppercase; color: var(--accent-text); }
+.muted { color: var(--muted); }
+.mono { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: .5rem; border: 1px solid var(--line); background: var(--surface); border-radius: 999px; padding: .65rem 1.2rem; font-weight: 600; text-decoration: none; transition: transform .15s, background .15s, border-color .15s; min-height: 44px; }
+.btn:hover { border-color: var(--accent); }
+.btn:active { transform: translateY(1px); }
+.btn--primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.btn--primary:hover { filter: brightness(1.07); }
+.btn--sm { min-height: 36px; padding: .35rem .9rem; font-size: .9rem; }
+.btn[disabled] { opacity: .5; cursor: not-allowed; }
+.icon-btn { position: relative; display: inline-grid; place-items: center; width: 44px; height: 44px; border-radius: 50%; border: 1px solid var(--line); background: var(--surface); }
+.icon-btn:hover { border-color: var(--accent); }
+.icon-btn svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.badge { position: absolute; top: -4px; right: -4px; min-width: 20px; height: 20px; padding: 0 5px; border-radius: 10px; background: var(--accent); color: var(--accent-ink); font-size: 12px; font-weight: 700; display: grid; place-items: center; }
+.badge[hidden] { display: none; }
+
+/* header */
+.site-header { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 50; background: color-mix(in srgb, var(--bg) 86%, transparent); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); border-bottom: 1px solid var(--line); margin-inline: calc(-1 * max(16px, env(safe-area-inset-left, 0px))); padding-inline: max(16px, env(safe-area-inset-left, 0px)); }
+.site-header .wrap { display: flex; align-items: center; gap: 1rem; min-height: 64px; }
+.logo { font-family: var(--font-display); font-weight: 800; font-size: 1.35rem; text-decoration: none; display: flex; align-items: center; gap: .5rem; margin-right: auto; }
+.logo i { width: 12px; height: 12px; border-radius: 3px; background: var(--accent); display: inline-block; box-shadow: 0 0 14px var(--accent); }
+.nav { display: flex; gap: 1.4rem; }
+.nav a { text-decoration: none; color: var(--muted); font-weight: 500; }
+.nav a:hover { color: var(--fg); }
+.header-actions { display: flex; gap: .5rem; align-items: center; }
+.acct-label { font-size: .9rem; font-weight: 600; max-width: 9rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.acct-btn { display: inline-flex; align-items: center; gap: .5rem; height: 44px; padding: 0 .9rem 0 .75rem; border-radius: 999px; border: 1px solid var(--line); background: var(--surface); }
+.acct-btn svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.acct-btn:hover { border-color: var(--accent); }
+@media (max-width: 820px) { .nav { display: none; } }
+@media (max-width: 480px) { .acct-label { display: none; } .acct-btn { padding: 0; width: 44px; justify-content: center; } }
+
+.demo-strip { background: var(--surface-2); border-bottom: 1px solid var(--line); font-size: var(--fs-s); text-align: center; padding: .45rem 0; color: var(--muted); margin-inline: calc(-1 * max(16px, env(safe-area-inset-left, 0px))); padding-inline: max(16px, env(safe-area-inset-left, 0px)); }
+.demo-strip strong { color: var(--fg); }
+
+/* hero */
+.hero { padding-block: clamp(2.5rem, 6vw, 5rem); display: grid; grid-template-columns: 1.1fr .9fr; gap: clamp(1.5rem, 4vw, 3.5rem); align-items: center; }
+.hero > * { min-width: 0; }
+.hero p.lead { font-size: 1.15rem; color: var(--muted); max-width: 52ch; margin-top: 1.2rem; }
+.hero .actions { display: flex; flex-wrap: wrap; gap: .75rem; margin-top: 1.8rem; }
+.hero h1 em { font-style: normal; color: var(--accent-text); }
+.term { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-l); box-shadow: var(--shadow); overflow: hidden; }
+.term-bar { display: flex; align-items: center; gap: .4rem; padding: .7rem 1rem; border-bottom: 1px solid var(--line); background: var(--surface-2); font-family: var(--font-mono); font-size: var(--fs-s); color: var(--muted); }
+.term-bar i { width: 10px; height: 10px; border-radius: 50%; background: var(--line); }
+.term-bar span { margin-left: auto; }
+.term pre { margin: 0; padding: 1.1rem 1.1rem 1.3rem; font-family: var(--font-mono); font-size: .82rem; line-height: 1.75; overflow-x: auto; }
+.term .ok { color: var(--accent-text); }
+.term .dim { color: var(--muted); }
+@media (max-width: 860px) { .hero { grid-template-columns: 1fr; } }
+
+/* usp */
+.usps { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; background: var(--line); border: 1px solid var(--line); border-radius: var(--r-m); overflow: hidden; }
+.usps > div { background: var(--surface); padding: 1rem 1.1rem; min-width: 0; }
+.usps strong { display: block; font-family: var(--font-display); font-weight: 600; }
+.usps span { color: var(--muted); font-size: .9rem; }
+@media (max-width: 860px) { .usps { grid-template-columns: repeat(2, 1fr); } }
+
+/* shop */
+section.block { padding-block: clamp(2.5rem, 6vw, 4.5rem); }
+.sec-head { display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: 1rem; margin-bottom: 1.6rem; }
+.sec-head > div { display: grid; gap: .5rem; }
+.toolbar { display: flex; flex-wrap: wrap; gap: .75rem; align-items: center; margin-bottom: 1.4rem; }
+.chips { display: flex; flex-wrap: wrap; gap: .5rem; }
+.chip { border: 1px solid var(--line); background: var(--surface); border-radius: 999px; padding: .4rem .95rem; font-weight: 500; font-size: .92rem; min-height: 38px; }
+.chip[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.field-inline { display: flex; gap: .5rem; margin-left: auto; flex-wrap: wrap; }
+.input, select.input, textarea.input { width: 100%; background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-s); padding: .65rem .8rem; min-height: 44px; }
+.input:focus { outline: 2px solid var(--accent); outline-offset: 1px; border-color: var(--accent); }
+.field-inline .input { width: auto; min-width: 11rem; }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 1.1rem; }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-l); display: flex; flex-direction: column; overflow: hidden; min-width: 0; transition: border-color .2s, transform .2s; }
+.card:hover { border-color: color-mix(in srgb, var(--accent) 60%, var(--line)); transform: translateY(-2px); }
+.card-img { background: var(--surface-2); padding: 1.2rem; display: grid; place-items: center; position: relative; border-bottom: 1px solid var(--line); }
+.card-img svg { width: 100%; max-width: 220px; height: auto; display: block; }
+.tag { position: absolute; top: .8rem; left: .8rem; font-family: var(--font-mono); font-size: 11px; letter-spacing: .06em; text-transform: uppercase; background: var(--bg); border: 1px solid var(--line); border-radius: 999px; padding: .15rem .6rem; color: var(--accent-text); }
+.card-body { padding: 1.1rem 1.2rem 1.3rem; display: flex; flex-direction: column; gap: .6rem; flex: 1; }
+.card-body p { color: var(--muted); font-size: .94rem; }
+.specs { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: .35rem; }
+.specs li { font-family: var(--font-mono); font-size: 11.5px; padding: .15rem .5rem; border-radius: 6px; background: var(--surface-2); color: var(--muted); }
+.card-foot { margin-top: auto; padding-top: .7rem; display: flex; align-items: center; justify-content: space-between; gap: .6rem; }
+.price { font-family: var(--font-display); font-weight: 800; font-size: 1.4rem; font-variant-numeric: tabular-nums; }
+.empty { padding: 2rem; text-align: center; border: 1px dashed var(--line); border-radius: var(--r-m); color: var(--muted); }
+
+/* steps */
+.steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.1rem; counter-reset: s; list-style: none; padding: 0; margin: 0; }
+.steps li { counter-increment: s; background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-l); padding: 1.4rem; display: grid; gap: .6rem; }
+.steps li::before { content: "Stap " counter(s); font-family: var(--font-mono); font-size: var(--fs-s); color: var(--accent-text); letter-spacing: .06em; text-transform: uppercase; }
+.steps p { color: var(--muted); }
+@media (max-width: 760px) { .steps { grid-template-columns: 1fr; } }
+
+/* contact */
+.contact { display: grid; grid-template-columns: .8fr 1.2fr; gap: clamp(1.5rem, 4vw, 3rem); }
+.contact > * { min-width: 0; }
+.contact-list { display: grid; gap: 1rem; margin-top: 1.4rem; }
+.contact-list div { border-top: 1px solid var(--line); padding-top: .8rem; display: grid; gap: .15rem; }
+.contact-list .row { display: flex; align-items: center; gap: .6rem; flex-wrap: wrap; }
+.contact-list span.k { font-family: var(--font-mono); font-size: var(--fs-s); text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-l); padding: clamp(1.1rem, 3vw, 1.8rem); }
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: .9rem; }
+.form-grid .full { grid-column: 1 / -1; }
+label.f { display: grid; gap: .3rem; font-size: .9rem; font-weight: 500; min-width: 0; }
+.status { margin-top: .9rem; padding: .7rem .9rem; border-radius: var(--r-s); background: var(--surface-2); border: 1px solid var(--line); font-size: .92rem; }
+@media (max-width: 820px) { .contact { grid-template-columns: 1fr; } }
+@media (max-width: 520px) { .form-grid { grid-template-columns: 1fr; } }
+
+/* faq */
+.faq { display: grid; gap: .6rem; max-width: 780px; }
+.faq details { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-m); padding: 0 1.1rem; }
+.faq summary { cursor: pointer; font-weight: 600; padding: 1rem 0; list-style: none; display: flex; justify-content: space-between; gap: 1rem; }
+.faq summary::-webkit-details-marker { display: none; }
+.faq summary::after { content: "+"; font-family: var(--font-mono); color: var(--accent-text); }
+.faq details[open] summary::after { content: "−"; }
+.faq details p { padding-bottom: 1rem; color: var(--muted); }
+
+footer { border-top: 1px solid var(--line); padding-block: 2.2rem 3rem; margin-inline: calc(-1 * max(16px, env(safe-area-inset-left, 0px))); padding-inline: max(16px, env(safe-area-inset-left, 0px)); }
+footer .wrap { display: grid; gap: 1.2rem; }
+.pay-marks { display: flex; flex-wrap: wrap; gap: .5rem; }
+.mark { font-size: 12px; font-weight: 600; padding: .25rem .6rem; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); color: var(--muted); }
+.foot-row { display: flex; flex-wrap: wrap; gap: 1rem; justify-content: space-between; color: var(--muted); font-size: .9rem; }
+
+/* layers: drawer, modal, checkout */
+.layer { position: fixed; inset: 0; z-index: 100; display: flex; justify-content: flex-end; }
+.layer[hidden] { display: none; }
+.scrim { position: absolute; inset: 0; background: var(--overlay); }
+.drawer { position: relative; width: min(440px, 100%); height: 100%; background: var(--bg); border-left: 1px solid var(--line); display: flex; flex-direction: column; box-shadow: var(--shadow); padding-bottom: env(safe-area-inset-bottom, 0px); padding-top: env(safe-area-inset-top, 0px); animation: slide .22s ease-out; }
+@keyframes slide { from { transform: translateX(30px); opacity: 0; } to { transform: none; opacity: 1; } }
+.layer--center { justify-content: center; align-items: center; padding: 16px; }
+.modal { position: relative; width: min(460px, 100%); max-height: 100%; overflow: auto; background: var(--bg); border: 1px solid var(--line); border-radius: var(--r-l); box-shadow: var(--shadow); padding: 1.6rem; animation: pop .2s ease-out; }
+@keyframes pop { from { transform: translateY(10px) scale(.98); opacity: 0; } to { transform: none; opacity: 1; } }
+.checkout { position: relative; width: min(1040px, 100%); max-height: 100%; overflow: auto; background: var(--bg); border: 1px solid var(--line); border-radius: var(--r-l); box-shadow: var(--shadow); animation: pop .2s ease-out; }
+.layer--center .checkout { margin: 0; }
+.layer-head { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 1rem 1.2rem; border-bottom: 1px solid var(--line); }
+.x { width: 40px; height: 40px; border-radius: 50%; border: 1px solid var(--line); background: var(--surface); font-size: 1.2rem; line-height: 1; }
+.drawer-body { flex: 1; overflow: auto; padding: 1rem 1.2rem; display: grid; gap: .9rem; align-content: start; }
+.drawer-foot { border-top: 1px solid var(--line); padding: 1rem 1.2rem; display: grid; gap: .7rem; background: var(--surface); }
+.line { display: grid; grid-template-columns: 64px 1fr auto; gap: .8rem; align-items: center; background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-m); padding: .7rem; }
+.line .thumb { width: 64px; height: 52px; background: var(--surface-2); border-radius: var(--r-s); display: grid; place-items: center; }
+.line .thumb svg { width: 52px; height: auto; }
+.line h4 { margin: 0; font-size: .95rem; font-weight: 600; }
+.line .meta { color: var(--muted); font-size: .85rem; }
+.line .right { text-align: right; display: grid; gap: .3rem; justify-items: end; }
+.qty { display: inline-flex; align-items: center; border: 1px solid var(--line); border-radius: 999px; overflow: hidden; }
+.qty button { width: 32px; height: 32px; background: var(--surface-2); border: 0; font-size: 1rem; }
+.qty button:hover { background: var(--accent); color: var(--accent-ink); }
+.qty span { min-width: 28px; text-align: center; font-variant-numeric: tabular-nums; font-size: .92rem; }
+.link-btn { background: none; border: 0; color: var(--muted); text-decoration: underline; font-size: .82rem; padding: 0; }
+.link-btn:hover { color: var(--danger); }
+.progress { height: 6px; background: var(--surface-2); border-radius: 3px; overflow: hidden; }
+.progress i { display: block; height: 100%; background: var(--accent); transition: width .3s; }
+.sum { display: grid; gap: .35rem; font-variant-numeric: tabular-nums; }
+.sum div { display: flex; justify-content: space-between; gap: 1rem; }
+.sum .total { font-family: var(--font-display); font-weight: 800; font-size: 1.3rem; border-top: 1px solid var(--line); padding-top: .6rem; margin-top: .3rem; }
+.coupon { display: flex; gap: .5rem; }
+.coupon .input { min-height: 40px; }
+.tabs { display: grid; grid-template-columns: 1fr 1fr; background: var(--surface); border: 1px solid var(--line); border-radius: 999px; padding: 3px; margin: 1rem 0; }
+.tabs button { border: 0; background: none; border-radius: 999px; padding: .5rem; font-weight: 600; min-height: 40px; }
+.tabs button[aria-selected="true"] { background: var(--accent); color: var(--accent-ink); }
+.stack { display: grid; gap: .8rem; }
+.note { font-size: .85rem; color: var(--muted); border-left: 3px solid var(--warn); padding: .3rem .8rem; background: var(--surface); border-radius: 0 var(--r-s) var(--r-s) 0; }
+.err { color: var(--danger); font-size: .85rem; min-height: 1em; }
+
+.co-grid { display: grid; grid-template-columns: 1.4fr 1fr; gap: 1.4rem; padding: 1.2rem; }
+.co-grid > * { min-width: 0; }
+.co-steps { display: flex; gap: .4rem; list-style: none; margin: 0 0 1.2rem; padding: 0; flex-wrap: wrap; }
+.co-steps li { font-family: var(--font-mono); font-size: var(--fs-s); padding: .3rem .8rem; border: 1px solid var(--line); border-radius: 999px; color: var(--muted); }
+.co-steps li[aria-current="step"] { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.co-steps li.done { color: var(--accent-text); border-color: var(--accent); }
+.opts { display: grid; gap: .5rem; }
+.opt { display: grid; grid-template-columns: auto 1fr auto; gap: .8rem; align-items: center; background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-m); padding: .8rem 1rem; cursor: pointer; }
+.opt:has(input:checked) { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 9%, var(--surface)); }
+.opt:has(input:focus-visible) { outline: 2px solid var(--accent); outline-offset: 2px; }
+.opt input { accent-color: var(--accent); width: 18px; height: 18px; }
+.opt b { display: block; font-weight: 600; }
+.opt small { color: var(--muted); }
+.opt .mk { font-size: 11px; font-weight: 700; letter-spacing: .04em; padding: .2rem .5rem; border-radius: 5px; background: var(--surface-2); color: var(--muted); border: 1px solid var(--line); white-space: nowrap; }
+.pay-detail { margin-top: .8rem; background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-m); padding: 1rem; display: grid; gap: .8rem; }
+.pay-detail[hidden] { display: none; }
+.co-actions { display: flex; justify-content: space-between; gap: .8rem; margin-top: 1.3rem; flex-wrap: wrap; }
+.co-aside { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-l); padding: 1.1rem; align-self: start; display: grid; gap: .8rem; }
+.co-aside .mini { display: flex; justify-content: space-between; gap: .8rem; font-size: .92rem; }
+.co-aside .mini span:first-child { min-width: 0; overflow-wrap: anywhere; }
+.done-box { text-align: center; padding: 2.4rem 1.4rem 2rem; display: grid; gap: 1rem; justify-items: center; }
+.done-box .check { width: 64px; height: 64px; border-radius: 50%; background: var(--accent); color: var(--accent-ink); display: grid; place-items: center; font-size: 2rem; }
+.orders { display: grid; gap: .5rem; margin-top: .8rem; }
+.orders div { display: flex; justify-content: space-between; gap: 1rem; font-size: .92rem; padding: .6rem .8rem; background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-s); }
+@media (max-width: 800px) { .co-grid { grid-template-columns: 1fr; } .co-aside { order: -1; } }
+.toast { position: fixed; left: 50%; bottom: calc(20px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%) translateY(20px); background: var(--fg); color: var(--bg); padding: .7rem 1.1rem; border-radius: 999px; font-weight: 500; font-size: .92rem; opacity: 0; pointer-events: none; transition: .25s; z-index: 200; max-width: calc(100% - 32px); text-align: center; }
+.toast.show { opacity: 1; transform: translateX(-50%); }
+@media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; scroll-behavior: auto !important; } }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.board-body { fill: var(--board); stroke: var(--board-line); stroke-width: 2; }
+.board-part { fill: var(--surface-2); stroke: var(--board-line); stroke-width: 1.5; }
+.board-chip { fill: var(--bg); stroke: var(--accent); stroke-width: 1.5; }
+.board-led { fill: var(--accent); }
+.board-txt { font-family: var(--font-mono); font-size: 9px; fill: var(--accent-text); letter-spacing: .06em; }
+.board-ico { fill: none; stroke: var(--accent-text); stroke-width: 4; stroke-linecap: round; stroke-linejoin: round; }
+</style>
+
+<div class="demo-strip">Dit is een <strong>demo-winkel</strong>: producten, prijzen en contactgegevens zijn voorbeelden. Er wordt niets echt betaald, verzonden of opgeslagen op een server.</div>
+
+<header class="site-header">
+  <div class="wrap">
+    <a class="logo" href="#top" aria-label="Piforge, naar boven"><i></i>Piforge</a>
+    <nav class="nav" aria-label="Hoofdnavigatie">
+      <a href="#shop">Winkel</a><a href="#werkwijze">Werkwijze</a><a href="#contact">Contact</a><a href="#faq">Veelgesteld</a>
+    </nav>
+    <div class="header-actions">
+      <button class="icon-btn" id="theme-btn" type="button" aria-label="Wissel tussen licht en donker">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5Z"/></svg>
+      </button>
+      <button class="acct-btn" id="acct-btn" type="button" aria-haspopup="dialog">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c1-4 4-6 8-6s7 2 8 6"/></svg>
+        <span class="acct-label" id="acct-label">Inloggen</span>
+      </button>
+      <button class="icon-btn" id="cart-btn" type="button" aria-label="Winkelmand openen" aria-haspopup="dialog">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 4h2l2.4 11.2a2 2 0 0 0 2 1.6h7.7a2 2 0 0 0 2-1.5L21 8H6"/><circle cx="10" cy="20" r="1.2"/><circle cx="17" cy="20" r="1.2"/></svg>
+        <span class="badge" id="cart-count" hidden>0</span>
+      </button>
+    </div>
+  </div>
+</header>
+
+<main id="top">
+  <section class="hero wrap">
+    <div>
+      <p class="eyebrow">Raspberry Pi voor thuis</p>
+      <h1>Jouw eigen server, <em>klaar voor gebruik</em>.</h1>
+      <p class="lead">Piforge bouwt, installeert en test Raspberry Pi-systemen voor thuis: advertentieblokkering op je hele netwerk, een mediacentrum, slimme woning of eigen cloudopslag. Jij stopt de stekker erin.</p>
+      <div class="actions">
+        <a class="btn btn--primary" href="#shop">Bekijk de pakketten</a>
+        <a class="btn" href="#contact">Vraag maatwerk aan</a>
+      </div>
+    </div>
+    <div class="term" aria-label="Voorbeeld van de statuspagina van een Pi-hole pakket">
+      <div class="term-bar"><i></i><i></i><i></i><span>pi@piforge ~ (voorbeeld)</span></div>
+<pre><span class="dim">$</span> pihole status
+<span class="ok">[✓]</span> FTL draait
+<span class="ok">[✓]</span> DNS-filter actief op 192.168.1.2:53
+<span class="dim">$</span> pihole -c
+ Geblokkeerd vandaag : <span class="ok">3.412 van 11.870</span>
+ Percentage          : <span class="ok">28,7 %</span>
+ Systeem             : Pi 4 · 2 GB · 41 °C
+<span class="dim">$</span> _</pre>
+    </div>
+  </section>
+
+  <div class="wrap"><div class="usps">
+    <div><strong>Voorgeïnstalleerd</strong><span>Getest en direct bruikbaar</span></div>
+    <div><strong>14 dagen bedenktijd</strong><span>Retour van fysieke producten</span></div>
+    <div><strong>2 jaar garantie</strong><span>Op alle hardware</span></div>
+    <div><strong>Hulp in het Nederlands</strong><span>Per mail of telefoon</span></div>
+  </div></div>
+
+  <section class="block wrap" id="shop">
+    <div class="sec-head">
+      <div><p class="eyebrow">Winkel</p><h2>Kies je pakket</h2></div>
+      <p class="muted" id="result-count" aria-live="polite"></p>
+    </div>
+    <div class="toolbar">
+      <div class="chips" id="chips" role="group" aria-label="Categorie"></div>
+      <div class="field-inline">
+        <label class="sr" for="search">Zoek een product</label>
+        <input class="input" id="search" type="search" placeholder="Zoek, bijv. Pi-hole">
+        <label class="sr" for="sort">Sorteren</label>
+        <select class="input" id="sort">
+          <option value="pop">Populair</option><option value="asc">Prijs laag naar hoog</option><option value="desc">Prijs hoog naar laag</option>
+        </select>
+      </div>
+    </div>
+    <div class="grid" id="grid"></div>
+  </section>
+
+  <section class="block wrap" id="werkwijze">
+    <div class="sec-head"><div><p class="eyebrow">Werkwijze</p><h2>Van bestelling tot werkend systeem</h2></div></div>
+    <ol class="steps">
+      <li><h3>Jij kiest</h3><p>Kies een kant-en-klaar pakket of vraag maatwerk aan voor een eigen combinatie van hardware en software.</p></li>
+      <li><h3>Wij installeren en testen</h3><p>We flashen het besturingssysteem, zetten je diensten klaar en laten het systeem 24 uur draaien voor we het verpakken.</p></li>
+      <li><h3>Jij sluit aan</h3><p>Stekker erin, netwerkkabel erin en volg de korte handleiding. Lukt het niet, dan helpen we op afstand.</p></li>
+    </ol>
+  </section>
+
+  <section class="block wrap" id="contact">
+    <div class="contact">
+      <div>
+        <p class="eyebrow">Contact</p><h2>Vraag het ons gewoon</h2>
+        <p class="muted" style="margin-top:.8rem">Twijfel je welk pakket past, of wil je iets op maat? Stuur een bericht. We reageren binnen twee werkdagen.</p>
+        <div class="contact-list">
+          <div><span class="k">E-mail (voorbeeld)</span><span class="row"><span class="mono" id="mail-text">hallo@piforge.example</span><button class="btn btn--sm" type="button" id="copy-mail">Kopieer</button></span></div>
+          <div><span class="k">Telefoon (voorbeeld)</span><span class="mono">+31 (0)00 000 00 00</span></div>
+          <div><span class="k">Bereikbaar</span><span>Ma t/m vr, 09:00 tot 17:00</span></div>
+        </div>
+      </div>
+      <form class="panel" id="contact-form" novalidate>
+        <div class="form-grid">
+          <label class="f" for="c-name">Naam<input class="input" id="c-name" name="name" autocomplete="name" required></label>
+          <label class="f" for="c-mail">E-mailadres<input class="input" id="c-mail" name="email" type="email" autocomplete="email" required></label>
+          <label class="f full" for="c-topic">Waar gaat het over?
+            <select class="input" id="c-topic"><option>Vraag over een pakket</option><option>Maatwerk</option><option>Hulp bij een bestelling</option><option>Iets anders</option></select></label>
+          <label class="f full" for="c-msg">Bericht<textarea class="input" id="c-msg" rows="5" required></textarea></label>
+          <div class="full"><button class="btn btn--primary" type="submit">Verstuur bericht</button></div>
+        </div>
+        <p class="status" id="form-status" hidden></p>
+      </form>
+    </div>
+  </section>
+
+  <section class="block wrap" id="faq">
+    <div class="sec-head"><div><p class="eyebrow">Veelgesteld</p><h2>Goed om te weten</h2></div></div>
+    <div class="faq">
+      <details><summary>Hoe lang duurt de levering?</summary><p>Fysieke pakketten gaan binnen één werkdag na het testen op transport. Standaardlevering duurt 2 tot 3 werkdagen. Diensten op afstand plannen we in overleg.</p></details>
+      <details><summary>Welke betaalmethoden zijn er?</summary><p>In deze demo kun je kiezen uit iDEAL, creditcard, PayPal, Apple Pay, Google Pay, Bancontact, achteraf betalen en bankoverschrijving. Er wordt nog niets echt afgeschreven.</p></details>
+      <details><summary>Heb ik technische kennis nodig?</summary><p>Nee. Elk pakket komt met een handleiding in gewoon Nederlands. Wil je dat wij het op afstand voor je instellen, voeg dan de installatieservice toe.</p></details>
+      <details><summary>Kan ik iets terugsturen?</summary><p>Fysieke producten kun je binnen 14 dagen retourneren. Een aangepaste installatie op maat valt daar niet onder.</p></details>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <div class="pay-marks" aria-label="Beschikbare betaalmethoden in de demo"></div>
+    <div class="foot-row"><span>© Piforge. Voorbeeldwinkel, geen echte bestellingen mogelijk.</span><span>Prijzen inclusief 21% btw</span></div>
+  </div>
+</footer>
+
+<!-- cart -->
+<div class="layer" id="cart-layer" hidden>
+  <div class="scrim" data-close></div>
+  <aside class="drawer" role="dialog" aria-modal="true" aria-labelledby="cart-title">
+    <div class="layer-head"><h3 id="cart-title">Winkelmand</h3><button class="x" type="button" data-close aria-label="Sluiten">×</button></div>
+    <div class="drawer-body" id="cart-body"></div>
+    <div class="drawer-foot" id="cart-foot"></div>
+  </aside>
+</div>
+
+<!-- account -->
+<div class="layer layer--center" id="auth-layer" hidden>
+  <div class="scrim" data-close></div>
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="auth-title">
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:1rem"><h3 id="auth-title">Mijn account</h3><button class="x" type="button" data-close aria-label="Sluiten">×</button></div>
+    <div id="auth-guest">
+      <div class="tabs" role="tablist" aria-label="Inloggen of registreren">
+        <button type="button" role="tab" id="tab-login" aria-selected="true" aria-controls="form-login">Inloggen</button>
+        <button type="button" role="tab" id="tab-reg" aria-selected="false" aria-controls="form-reg">Registreren</button>
+      </div>
+      <form class="stack" id="form-login" novalidate>
+        <label class="f" for="l-mail">E-mailadres<input class="input" id="l-mail" type="email" autocomplete="email" required></label>
+        <label class="f" for="l-pass">Wachtwoord<input class="input" id="l-pass" type="password" autocomplete="current-password" required></label>
+        <p class="err" id="l-err" role="alert"></p>
+        <button class="btn btn--primary" type="submit">Inloggen</button>
+      </form>
+      <form class="stack" id="form-reg" hidden novalidate>
+        <label class="f" for="r-name">Naam<input class="input" id="r-name" autocomplete="name" required></label>
+        <label class="f" for="r-mail">E-mailadres<input class="input" id="r-mail" type="email" autocomplete="email" required></label>
+        <label class="f" for="r-pass">Wachtwoord (minimaal 8 tekens)<input class="input" id="r-pass" type="password" autocomplete="new-password" required></label>
+        <p class="err" id="r-err" role="alert"></p>
+        <button class="btn btn--primary" type="submit">Account maken</button>
+      </form>
+      <p class="note" style="margin-top:1rem">Demo: je wachtwoord wordt nergens opgeslagen of verstuurd. Alleen je naam en e-mailadres blijven in deze browser staan. Gebruik hier geen wachtwoord dat je elders gebruikt.</p>
+    </div>
+    <div id="auth-user" hidden>
+      <p style="margin-top:1rem"><strong id="u-name"></strong><br><span class="muted" id="u-mail"></span></p>
+      <h4 style="margin:1.2rem 0 0;font-family:var(--font-display)">Demo-bestellingen</h4>
+      <div class="orders" id="u-orders"></div>
+      <button class="btn" type="button" id="logout" style="margin-top:1.2rem">Uitloggen</button>
+    </div>
+  </div>
+</div>
+
+<!-- checkout -->
+<div class="layer layer--center" id="co-layer" hidden>
+  <div class="scrim" data-close></div>
+  <div class="checkout" role="dialog" aria-modal="true" aria-labelledby="co-title">
+    <div class="layer-head"><h3 id="co-title">Afrekenen</h3><button class="x" type="button" data-close aria-label="Sluiten">×</button></div>
+    <div id="co-main" class="co-grid">
+      <div>
+        <ol class="co-steps" id="co-steps"><li>1 Gegevens</li><li>2 Verzending</li><li>3 Betalen</li></ol>
+        <form id="co-form1" novalidate>
+          <div class="form-grid">
+            <label class="f full" for="k-mail">E-mailadres<input class="input" id="k-mail" type="email" autocomplete="email" required></label>
+            <label class="f full" for="k-name">Volledige naam<input class="input" id="k-name" autocomplete="name" required></label>
+            <div id="addr" class="form-grid full" style="padding:0">
+              <label class="f full" for="k-street">Straat en huisnummer<input class="input" id="k-street" autocomplete="street-address"></label>
+              <label class="f" for="k-zip">Postcode<input class="input" id="k-zip" autocomplete="postal-code" placeholder="1234 AB"></label>
+              <label class="f" for="k-city">Plaats<input class="input" id="k-city" autocomplete="address-level2"></label>
+            </div>
+          </div>
+          <p class="err" id="k-err" role="alert"></p>
+        </form>
+        <div id="co-p2" hidden>
+          <div class="opts" id="ship-opts"></div>
+        </div>
+        <div id="co-p3" hidden>
+          <div class="opts" id="pay-opts"></div>
+          <div class="pay-detail" id="pay-detail" hidden></div>
+        </div>
+        <div class="co-actions">
+          <button class="btn" type="button" id="co-back">Terug</button>
+          <button class="btn btn--primary" type="button" id="co-next">Verder</button>
+        </div>
+      </div>
+      <aside class="co-aside" aria-label="Overzicht van je bestelling" id="co-aside"></aside>
+    </div>
+    <div id="co-done" hidden></div>
+  </div>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+(function () {
+  'use strict';
+  var $ = function (s, r) { return (r || document).querySelector(s); };
+  var $$ = function (s, r) { return Array.prototype.slice.call((r || document).querySelectorAll(s)); };
+  var store = {
+    get: function (k, d) { try { var v = localStorage.getItem('pf:' + k); return v ? JSON.parse(v) : d; } catch (e) { return d; } },
+    set: function (k, v) { try { localStorage.setItem('pf:' + k, JSON.stringify(v)); } catch (e) {} }
+  };
+  var esc = function (s) { return String(s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
+  var eur = function (c) { return '€ ' + (c / 100).toLocaleString('nl-NL', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); };
+
+  var PRODUCTS = [
+    { id: 'pihole', cat: 'pakket', name: 'Pi-hole Netwerkblokker', price: 11900, tag: 'Bestseller', chip: 'BCM2711', desc: 'Blokkeert advertenties en trackers voor elk apparaat in huis. Voorgeïnstalleerd met Pi-hole en Unbound.', specs: ['Pi 4 · 2 GB', 'microSD 32 GB', 'Pi-hole v6'] },
+    { id: 'media', cat: 'pakket', name: 'Mediacentrum', price: 18900, tag: '', chip: 'BCM2712', desc: 'Je films en series op elke tv in huis. Met LibreELEC en Kodi, inclusief afstandsbediening via je telefoon.', specs: ['Pi 5 · 4 GB', '4K HDR', 'LibreELEC'] },
+    { id: 'smart', cat: 'pakket', name: 'Smart-home Hub', price: 22900, tag: 'Populair', chip: 'BCM2712', desc: 'Home Assistant op een snelle SSD, met Zigbee-stick. Lampen, thermostaat en sensoren in één app.', specs: ['Pi 5 · 4 GB', 'SSD 128 GB', 'Zigbee'] },
+    { id: 'cloud', cat: 'pakket', name: 'Persoonlijke Cloud', price: 32900, tag: '', chip: 'BCM2712', desc: 'Je eigen Nextcloud met 1 TB opslag. Foto’s, bestanden en agenda’s blijven van jou.', specs: ['Pi 5 · 8 GB', 'SSD 1 TB', 'Nextcloud'] },
+    { id: 'vpn', cat: 'pakket', name: 'VPN-thuisserver', price: 13900, tag: 'Nieuw', chip: 'BCM2711', desc: 'WireGuard klaar voor gebruik. Veilig bij je thuisnetwerk vanaf je telefoon of laptop onderweg.', specs: ['Pi 4 · 2 GB', 'WireGuard', 'QR-setup'] },
+    { id: 'retro', cat: 'pakket', name: 'Retro-gamebox', price: 15900, tag: '', chip: 'BCM2712', desc: 'Duizenden klassiekers op je tv. Voorzien van RetroPie, twee controllers en nette behuizing.', specs: ['Pi 5 · 4 GB', '2 controllers', 'RetroPie'] },
+    { id: 'ssd', cat: 'accessoire', name: 'NVMe-SSD 500 GB', price: 6900, tag: '', chip: 'NVMe', desc: 'Snellere en betrouwbaardere opslag dan een microSD-kaart. Past op de Pi 5 met M.2-hat.', specs: ['500 GB', 'M.2 2230', 'PCIe'] },
+    { id: 'psu', cat: 'accessoire', name: 'Voeding 27 W USB-C', price: 1500, tag: '', chip: '27W', desc: 'Stabiele voeding voor de Raspberry Pi 5, met aan/uit-schakelaar in de kabel.', specs: ['5,1 V / 5 A', 'USB-C', '1,5 m'] },
+    { id: 'case', cat: 'accessoire', name: 'Aluminium behuizing', price: 2900, tag: '', chip: 'ALU', desc: 'Passief gekoelde behuizing zonder ventilator. Stil en robuust.', specs: ['Passieve koeling', 'Pi 4 en Pi 5', 'Zwart'] },
+    { id: 'setup', cat: 'dienst', name: 'Installatie op afstand', price: 4900, tag: '', service: true, desc: 'We loggen samen met je in, stellen alles in en leggen uit hoe het werkt. Duurt ongeveer een uur.', specs: ['1 uur', 'Videobellen', 'Geen verzending'] },
+    { id: 'custom', cat: 'dienst', name: 'Maatwerk per uur', price: 7500, tag: '', service: true, desc: 'Een eigen koppeling, script of combinatie van diensten. We maken vooraf een inschatting van de uren.', specs: ['Per uur', 'Inschatting vooraf', 'Op afstand'] }
+  ];
+  var CATS = [['alle', 'Alles'], ['pakket', 'Pakketten'], ['accessoire', 'Accessoires'], ['dienst', 'Diensten']];
+  var SHIPPING = [
+    { id: 'std', name: 'Standaard (2 tot 3 werkdagen)', price: 495, freeFrom: 10000, note: 'Gratis vanaf € 100' },
+    { id: 'exp', name: 'Express (volgende werkdag)', price: 995, freeFrom: null, note: 'Besteld voor 15:00' },
+    { id: 'pick', name: 'Ophalen (voorbeeldlocatie)', price: 0, freeFrom: null, note: 'Gratis' }
+  ];
+  var PAYMENTS = [
+    { id: 'ideal', name: 'iDEAL', desc: 'Betaal via je eigen bank', mk: 'iDEAL' },
+    { id: 'card', name: 'Creditcard of betaalpas', desc: 'Visa, Mastercard, Maestro', mk: 'KAART' },
+    { id: 'paypal', name: 'PayPal', desc: 'Betaal met je PayPal-account', mk: 'PAYPAL' },
+    { id: 'apple', name: 'Apple Pay', desc: 'Op apparaten van Apple', mk: 'APPLE PAY' },
+    { id: 'google', name: 'Google Pay', desc: 'Op Android en Chrome', mk: 'G PAY' },
+    { id: 'bc', name: 'Bancontact', desc: 'Voor Belgische klanten', mk: 'BANCONTACT' },
+    { id: 'later', name: 'Achteraf betalen', desc: 'Binnen 14 dagen na ontvangst', mk: 'ACHTERAF' },
+    { id: 'sepa', name: 'Bankoverschrijving', desc: 'Wij sturen je betaalgegevens', mk: 'SEPA' }
+  ];
+  var BANKS = ['ABN AMRO', 'ING', 'Rabobank', 'SNS', 'ASN Bank', 'Bunq', 'Knab', 'Triodos Bank', 'Van Lanschot', 'Revolut'];
+  var COUPONS = { PIFORGE10: { pct: 10, label: '10% korting' } };
+
+  var state = {
+    cart: store.get('cart', {}), user: store.get('user', null), orders: store.get('orders', []),
+    coupon: store.get('coupon', null), cat: 'alle', q: '', sort: 'pop',
+    ck: { step: 1, ship: 'std', pay: 'ideal', info: {} }, lastFocus: null
+  };
+  // clean stale cart ids
+  Object.keys(state.cart).forEach(function (id) { if (!find(id)) delete state.cart[id]; });
+
+  function find(id) { return PRODUCTS.filter(function (p) { return p.id === id; })[0]; }
+
+  /* ---------- illustrations ---------- */
+  function art(p) {
+    if (p.service) {
+      var ico = p.id === 'setup'
+        ? '<path class="board-ico" d="M60 95h80M80 95v-12h40v12M70 40h60v38H70z"/><path class="board-ico" d="M92 56l8 8 14-16"/>'
+        : '<circle class="board-ico" cx="100" cy="65" r="30"/><path class="board-ico" d="M100 45v22l14 8"/>';
+      return '<svg viewBox="0 0 200 130" role="img" aria-label="' + esc(p.name) + '">' + ico + '</svg>';
+    }
+    if (p.cat === 'accessoire') {
+      var w = p.id === 'psu' ? '<rect class="board-part" x="55" y="45" width="70" height="40" rx="6"/><path class="board-ico" d="M125 65h30M80 55v20"/><rect class="board-chip" x="150" y="58" width="16" height="14" rx="3"/>'
+        : '<rect class="board-body" x="45" y="40" width="110" height="50" rx="6"/><rect class="board-chip" x="62" y="52" width="76" height="12" rx="2"/><text class="board-txt" x="62" y="80">' + esc(p.chip) + '</text>';
+      return '<svg viewBox="0 0 200 130" role="img" aria-label="' + esc(p.name) + '">' + w + '</svg>';
+    }
+    return '<svg viewBox="0 0 200 130" role="img" aria-label="' + esc(p.name) + '">' +
+      '<rect class="board-body" x="20" y="18" width="160" height="94" rx="9"/>' +
+      '<rect class="board-chip" x="70" y="40" width="40" height="40" rx="4"/>' +
+      '<text class="board-txt" x="74" y="64">' + esc(p.chip) + '</text>' +
+      '<rect class="board-part" x="118" y="30" width="34" height="22" rx="3"/><rect class="board-part" x="118" y="58" width="34" height="22" rx="3"/>' +
+      '<rect class="board-part" x="28" y="30" width="26" height="16" rx="3"/><rect class="board-part" x="28" y="52" width="26" height="16" rx="3"/>' +
+      '<rect class="board-part" x="60" y="94" width="60" height="10" rx="2"/>' +
+      '<circle class="board-led" cx="162" cy="100" r="3"/><circle class="board-led" cx="150" cy="100" r="3" opacity=".45"/></svg>';
+  }
+
+  /* ---------- catalogue ---------- */
+  function renderChips() {
+    $('#chips').innerHTML = CATS.map(function (c) { return '<button type="button" class="chip" data-cat="' + c[0] + '" aria-pressed="' + (state.cat === c[0]) + '">' + c[1] + '</button>'; }).join('');
+  }
+  function renderGrid() {
+    var q = state.q.trim().toLowerCase();
+    var list = PRODUCTS.filter(function (p) {
+      return (state.cat === 'alle' || p.cat === state.cat) && (!q || (p.name + ' ' + p.desc + ' ' + p.specs.join(' ')).toLowerCase().indexOf(q) > -1);
+    });
+    if (state.sort === 'asc') list.sort(function (a, b) { return a.price - b.price; });
+    if (state.sort === 'desc') list.sort(function (a, b) { return b.price - a.price; });
+    $('#result-count').textContent = list.length + (list.length === 1 ? ' product' : ' producten');
+    $('#grid').innerHTML = list.length ? list.map(function (p) {
+      return '<article class="card"><div class="card-img">' + (p.tag ? '<span class="tag">' + esc(p.tag) + '</span>' : '') + art(p) + '</div>' +
+        '<div class="card-body"><h3>' + esc(p.name) + '</h3><p>' + esc(p.desc) + '</p>' +
+        '<ul class="specs">' + p.specs.map(function (s) { return '<li>' + esc(s) + '</li>'; }).join('') + '</ul>' +
+        '<div class="card-foot"><span class="price">' + eur(p.price) + '</span><button class="btn btn--primary btn--sm" type="button" data-add="' + p.id + '">In winkelmand</button></div></div></article>';
+    }).join('') : '<p class="empty" style="grid-column:1/-1">Niets gevonden voor deze zoekopdracht. Probeer een ander woord of kies een andere categorie.</p>';
+  }
+
+  /* ---------- cart math ---------- */
+  function items() { return Object.keys(state.cart).map(function (id) { return { p: find(id), n: state.cart[id] }; }).filter(function (x) { return x.p; }); }
+  function count() { return items().reduce(function (a, x) { return a + x.n; }, 0); }
+  function subtotal() { return items().reduce(function (a, x) { return a + x.p.price * x.n; }, 0); }
+  function needsShipping() { return items().some(function (x) { return !x.p.service; }); }
+  function discount() { var c = state.coupon && COUPONS[state.coupon]; return c ? Math.round(subtotal() * c.pct / 100) : 0; }
+  function shipCost(id) {
+    if (!needsShipping()) return 0;
+    var o = SHIPPING.filter(function (s) { return s.id === id; })[0] || SHIPPING[0];
+    if (o.freeFrom != null && subtotal() - discount() >= o.freeFrom) return 0;
+    return o.price;
+  }
+  function totals() { var sub = subtotal(), d = discount(), s = shipCost(state.ck.ship), t = sub - d + s; return { sub: sub, d: d, s: s, t: t, vat: Math.round(t * 21 / 121) }; }
+  function persistCart() { store.set('cart', state.cart); store.set('coupon', state.coupon); }
+
+  function add(id, n) { state.cart[id] = Math.min(10, (state.cart[id] || 0) + (n || 1)); persistCart(); updateCart(); }
+  function setQty(id, n) { if (n <= 0) delete state.cart[id]; else state.cart[id] = Math.min(10, n); persistCart(); updateCart(); }
+
+  function updateCart() {
+    var n = count(), b = $('#cart-count');
+    b.textContent = n; b.hidden = n === 0;
+    $('#cart-btn').setAttribute('aria-label', 'Winkelmand openen, ' + n + (n === 1 ? ' artikel' : ' artikelen'));
+    var body = $('#cart-body'), foot = $('#cart-foot'), its = items();
+    if (!its.length) {
+      body.innerHTML = '<div class="empty">Je winkelmand is leeg.<br><br><button class="btn btn--primary" type="button" data-close data-goto="#shop">Bekijk de winkel</button></div>';
+      foot.innerHTML = ''; foot.hidden = true;
+      if (!$('#co-layer').hidden && !$('#co-main').hidden) closeLayers();
+      return;
+    }
+    foot.hidden = false;
+    body.innerHTML = its.map(function (x) {
+      return '<div class="line"><div class="thumb">' + art(x.p) + '</div><div><h4>' + esc(x.p.name) + '</h4><div class="meta">' + eur(x.p.price) + ' per stuk</div>' +
+        '<div class="qty" role="group" aria-label="Aantal ' + esc(x.p.name) + '"><button type="button" data-dec="' + x.p.id + '" aria-label="Minder">−</button><span aria-live="polite">' + x.n + '</span><button type="button" data-inc="' + x.p.id + '" aria-label="Meer">+</button></div></div>' +
+        '<div class="right"><strong class="mono">' + eur(x.p.price * x.n) + '</strong><button class="link-btn" type="button" data-rm="' + x.p.id + '">Verwijder</button></div></div>';
+    }).join('');
+    var sub = subtotal(), d = discount(), ship = needsShipping();
+    var left = Math.max(0, 10000 - (sub - d));
+    var prog = ship ? '<div><div class="progress" aria-hidden="true"><i style="width:' + Math.min(100, (sub - d) / 100) + '%"></i></div><p class="muted" style="font-size:.85rem;margin-top:.4rem">' + (left > 0 ? 'Nog ' + eur(left) + ' tot gratis standaardverzending' : 'Je krijgt gratis standaardverzending') + '</p></div>' : '';
+    var cp = state.coupon && COUPONS[state.coupon];
+    foot.innerHTML = prog +
+      '<form class="coupon" id="coupon-form"><label class="sr" for="coupon">Kortingscode</label><input class="input" id="coupon" placeholder="Kortingscode, bijv. PIFORGE10" autocomplete="off"><button class="btn btn--sm" type="submit">Toepassen</button></form>' +
+      '<p class="err" id="coupon-msg" role="alert">' + (cp ? '' : '') + '</p>' +
+      '<div class="sum"><div><span>Subtotaal</span><span>' + eur(sub) + '</span></div>' +
+      (cp ? '<div><span>Korting (' + esc(state.coupon) + ') <button class="link-btn" type="button" id="rm-coupon">weg</button></span><span>−' + eur(d) + '</span></div>' : '') +
+      '<div class="muted" style="font-size:.85rem"><span>' + (ship ? 'Verzendkosten volgen bij afrekenen' : 'Geen verzendkosten') + '</span></div>' +
+      '<div class="total"><span>Totaal</span><span>' + eur(sub - d) + '</span></div></div>' +
+      '<button class="btn btn--primary" type="button" id="to-checkout">Afrekenen</button>';
+  }
+
+  /* ---------- layers ---------- */
+  function openLayer(id) {
+    closeLayers(true);
+    state.lastFocus = document.activeElement;
+    var l = $(id); l.hidden = false;
+    var f = $('input:not([type=hidden]), button:not([data-close]), [data-close]', $('[role=dialog]', l));
+    var t = $('.x', l) || f; if (t) t.focus();
+    document.documentElement.style.overflow = 'hidden';
+  }
+  function closeLayers(keepFocus) {
+    $$('.layer').forEach(function (l) { l.hidden = true; });
+    document.documentElement.style.overflow = '';
+    if (!keepFocus && state.lastFocus && state.lastFocus.focus) { try { state.lastFocus.focus(); } catch (e) {} }
+  }
+  var toastT;
+  function toast(msg) { var t = $('#toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(toastT); toastT = setTimeout(function () { t.classList.remove('show'); }, 2400); }
+
+  /* ---------- account ---------- */
+  function renderAccount() {
+    var u = state.user;
+    $('#acct-label').textContent = u ? u.name.split(' ')[0] : 'Inloggen';
+    $('#auth-guest').hidden = !!u; $('#auth-user').hidden = !u;
+    $('#auth-title').textContent = u ? 'Mijn account' : 'Welkom bij Piforge';
+    if (u) {
+      $('#u-name').textContent = u.name; $('#u-mail').textContent = u.email;
+      var mine = state.orders.filter(function (o) { return o.email === u.email; });
+      $('#u-orders').innerHTML = mine.length ? mine.map(function (o) { return '<div><span class="mono">' + esc(o.ref) + '</span><span>' + eur(o.total) + '</span></div>'; }).join('') : '<p class="muted">Nog geen demo-bestellingen.</p>';
+    }
+  }
+  function setTab(login) {
+    $('#tab-login').setAttribute('aria-selected', login); $('#tab-reg').setAttribute('aria-selected', !login);
+    $('#form-login').hidden = !login; $('#form-reg').hidden = login;
+  }
+  var mailOk = function (v) { return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v); };
+  function login(name, email) { state.user = { name: name, email: email }; store.set('user', state.user); renderAccount(); toast('Ingelogd als ' + name); }
+
+  /* ---------- checkout ---------- */
+  function openCheckout() {
+    if (!items().length) return;
+    state.ck.step = 1; $('#co-main').hidden = false; $('#co-done').hidden = true;
+    var u = state.user, inf = state.ck.info;
+    $('#k-mail').value = inf.email || (u ? u.email : ''); $('#k-name').value = inf.name || (u ? u.name : '');
+    $('#k-street').value = inf.street || ''; $('#k-zip').value = inf.zip || ''; $('#k-city').value = inf.city || '';
+    var ship = needsShipping(); $('#addr').hidden = !ship;
+    ['#k-street', '#k-zip', '#k-city'].forEach(function (s) { $(s).required = ship; });
+    state.ck.ship = ship ? (state.ck.ship || 'std') : 'std';
+    renderShip(); renderPay(); renderStep(); openLayer('#co-layer');
+  }
+  function renderShip() {
+    var ship = needsShipping();
+    $('#ship-opts').innerHTML = ship ? SHIPPING.map(function (s) {
+      var c = shipCost(s.id);
+      return '<label class="opt"><input type="radio" name="ship" value="' + s.id + '"' + (state.ck.ship === s.id ? ' checked' : '') + '><span><b>' + s.name + '</b><small>' + s.note + '</small></span><span class="mono">' + (c ? eur(c) : 'Gratis') + '</span></label>';
+    }).join('') : '<p class="note">Je bestelling bevat alleen diensten op afstand. Er is niets om te verzenden.</p>';
+  }
+  function renderPay() {
+    $('#pay-opts').innerHTML = PAYMENTS.map(function (p) {
+      return '<label class="opt"><input type="radio" name="pay" value="' + p.id + '"' + (state.ck.pay === p.id ? ' checked' : '') + '><span><b>' + p.name + '</b><small>' + p.desc + '</small></span><span class="mk">' + p.mk + '</span></label>';
+    }).join('');
+    renderPayDetail();
+  }
+  function renderPayDetail() {
+    var d = $('#pay-detail'), id = state.ck.pay, h = '';
+    if (id === 'ideal') h = '<label class="f" for="bank">Kies je bank<select class="input" id="bank">' + BANKS.map(function (b) { return '<option>' + b + '</option>'; }).join('') + '</select></label><p class="muted" style="font-size:.9rem">In een echte winkel ga je nu naar de omgeving van je bank. Hier gebeurt dat niet.</p>';
+    else if (id === 'card') h = '<p class="note">Demo: vul hier geen echte kaartgegevens in. De velden worden niet gelezen en niets wordt verstuurd.</p><div class="form-grid"><label class="f full" for="cc-n">Kaartnummer<input class="input" id="cc-n" inputmode="numeric" autocomplete="off" placeholder="Voorbeeld, niet invullen"></label><label class="f" for="cc-e">Geldig tot<input class="input" id="cc-e" autocomplete="off" placeholder="MM/JJ"></label><label class="f" for="cc-c">Cvc<input class="input" id="cc-c" autocomplete="off" placeholder="000"></label></div>';
+    else if (id === 'sepa') h = '<p>Je ontvangt na de bestelling een betaalverzoek. Voorbeeldrekening:</p><p class="mono">NL00 DEMO 0000 0000 00 · t.n.v. Piforge (voorbeeld)</p>';
+    else if (id === 'later') h = '<p>Je betaalt binnen 14 dagen na ontvangst. In een echte winkel controleert de aanbieder eerst je gegevens.</p>';
+    else h = '<p>In een echte winkel word je doorgestuurd naar ' + esc((PAYMENTS.filter(function (p) { return p.id === id; })[0] || {}).name) + ' om te bevestigen. Hier wordt dat gesimuleerd.</p>';
+    d.innerHTML = h; d.hidden = false;
+  }
+  function renderAside() {
+    var t = totals(), its = items();
+    $('#co-aside').innerHTML = '<h4 style="margin:0;font-family:var(--font-display)">Jouw bestelling</h4>' +
+      its.map(function (x) { return '<div class="mini"><span>' + x.n + '× ' + esc(x.p.name) + '</span><span class="mono">' + eur(x.p.price * x.n) + '</span></div>'; }).join('') +
+      '<div class="sum"><div><span>Subtotaal</span><span>' + eur(t.sub) + '</span></div>' +
+      (t.d ? '<div><span>Korting</span><span>−' + eur(t.d) + '</span></div>' : '') +
+      '<div><span>Verzending</span><span>' + (needsShipping() ? (t.s ? eur(t.s) : 'Gratis') : 'n.v.t.') + '</span></div>' +
+      '<div class="total"><span>Totaal</span><span>' + eur(t.t) + '</span></div>' +
+      '<div class="muted" style="font-size:.82rem"><span>Waarvan 21% btw</span><span>' + eur(t.vat) + '</span></div></div>';
+  }
+  function renderStep() {
+    var s = state.ck.step, skipShip = !needsShipping();
+    $$('#co-steps li').forEach(function (li, i) { li.removeAttribute('aria-current'); li.classList.toggle('done', i + 1 < s); if (i + 1 === s) li.setAttribute('aria-current', 'step'); });
+    $('#co-form1').hidden = s !== 1; $('#co-p2').hidden = s !== 2; $('#co-p3').hidden = s !== 3;
+    $('#co-back').style.visibility = s === 1 ? 'hidden' : 'visible';
+    $('#co-next').textContent = s === 3 ? 'Bestelling plaatsen (demo)' : 'Verder';
+    renderShip(); renderAside();
+  }
+  function nextStep() {
+    var s = state.ck.step, err = $('#k-err');
+    if (s === 1) {
+      var f = $('#co-form1'); err.textContent = '';
+      if (!mailOk($('#k-mail').value.trim())) { err.textContent = 'Vul een geldig e-mailadres in.'; $('#k-mail').focus(); return; }
+      if (!$('#k-name').value.trim()) { err.textContent = 'Vul je naam in.'; $('#k-name').focus(); return; }
+      if (needsShipping()) {
+        if (!$('#k-street').value.trim() || !$('#k-city').value.trim()) { err.textContent = 'Vul je straat en plaats in.'; return; }
+        if (!/^[1-9][0-9]{3}\s?[A-Za-z]{2}$/.test($('#k-zip').value.trim())) { err.textContent = 'Een postcode ziet er zo uit: 1234 AB.'; $('#k-zip').focus(); return; }
+      }
+      state.ck.info = { email: $('#k-mail').value.trim(), name: $('#k-name').value.trim(), street: $('#k-street').value.trim(), zip: $('#k-zip').value.trim(), city: $('#k-city').value.trim() };
+      state.ck.step = needsShipping() ? 2 : 3; renderStep(); return;
+    }
+    if (s === 2) { state.ck.step = 3; renderStep(); return; }
+    placeOrder();
+  }
+  function prevStep() {
+    var s = state.ck.step;
+    state.ck.step = (s === 3 && !needsShipping()) ? 1 : Math.max(1, s - 1); renderStep();
+  }
+  function placeOrder() {
+    var btn = $('#co-next'); btn.disabled = true; btn.textContent = 'Betaling wordt gesimuleerd…';
+    setTimeout(function () {
+      var t = totals(), ref = 'DEMO-' + Math.random().toString(36).slice(2, 8).toUpperCase();
+      var pay = PAYMENTS.filter(function (p) { return p.id === state.ck.pay; })[0].name;
+      var order = { ref: ref, total: t.t, email: state.ck.info.email, date: new Date().toISOString() };
+      state.orders.unshift(order); state.orders = state.orders.slice(0, 10); store.set('orders', state.orders);
+      var email = state.ck.info.email;
+      $('#co-main').hidden = true;
+      state.cart = {}; state.coupon = null; persistCart(); updateCart(); renderAccount();
+      var d = $('#co-done'); d.hidden = false;
+      d.innerHTML = '<div class="done-box"><div class="check" aria-hidden="true">✓</div><h2>Demo-bestelling geplaatst</h2>' +
+        '<p class="muted" style="max-width:48ch">Er is niets betaald, niets verzonden en er is geen bevestigingsmail verstuurd naar <strong>' + esc(email) + '</strong>. Zo zou het verlopen met ' + esc(pay) + ' als betaalmethode.</p>' +
+        '<p class="mono">Voorbeeldnummer: ' + ref + ' · ' + eur(t.t) + '</p><button class="btn btn--primary" type="button" data-close>Terug naar de winkel</button></div>';
+      var b = $('button', d); if (b) b.focus();
+      btn.disabled = false;
+    }, 1300);
+  }
+
+  /* ---------- events ---------- */
+  document.addEventListener('click', function (e) {
+    var t = e.target.closest('button, a, [data-close]'); if (!t) return;
+    var v;
+    if ((v = t.getAttribute('data-add'))) { add(v); toast(find(v).name + ' toegevoegd'); return; }
+    if ((v = t.getAttribute('data-inc'))) { setQty(v, state.cart[v] + 1); return; }
+    if ((v = t.getAttribute('data-dec'))) { setQty(v, state.cart[v] - 1); return; }
+    if ((v = t.getAttribute('data-rm'))) { setQty(v, 0); return; }
+    if ((v = t.getAttribute('data-cat'))) { state.cat = v; renderChips(); renderGrid(); return; }
+    if (t.hasAttribute('data-close')) { var g = t.getAttribute('data-goto'); closeLayers(); if (g) { var el = $(g); if (el) el.scrollIntoView(); } return; }
+    if (t.id === 'cart-btn') { updateCart(); openLayer('#cart-layer'); return; }
+    if (t.id === 'acct-btn') { renderAccount(); openLayer('#auth-layer'); return; }
+    if (t.id === 'to-checkout') { openCheckout(); return; }
+    if (t.id === 'rm-coupon') { state.coupon = null; persistCart(); updateCart(); return; }
+    if (t.id === 'co-next') { nextStep(); return; }
+    if (t.id === 'co-back') { prevStep(); return; }
+    if (t.id === 'logout') { state.user = null; store.set('user', null); renderAccount(); toast('Uitgelogd'); return; }
+    if (t.id === 'tab-login') { setTab(true); return; }
+    if (t.id === 'tab-reg') { setTab(false); return; }
+    if (t.id === 'theme-btn') {
+      var root = document.documentElement, dark = root.getAttribute('data-theme') ? root.getAttribute('data-theme') === 'dark' : !window.matchMedia('(prefers-color-scheme: light)').matches;
+      root.setAttribute('data-theme', dark ? 'light' : 'dark'); return;
+    }
+    if (t.id === 'copy-mail') {
+      var txt = $('#mail-text').textContent;
+      var fb = function () { var r = document.createRange(); r.selectNodeContents($('#mail-text')); var s = window.getSelection(); s.removeAllRanges(); s.addRange(r); toast('Selecteer en kopieer het adres'); };
+      try { navigator.clipboard.writeText(txt).then(function () { toast('Adres gekopieerd'); }, fb); } catch (err) { fb(); }
+      return;
+    }
+  });
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeLayers(); });
+  document.addEventListener('change', function (e) {
+    if (e.target.name === 'ship') { state.ck.ship = e.target.value; renderAside(); }
+    if (e.target.name === 'pay') { state.ck.pay = e.target.value; renderPayDetail(); }
+  });
+  document.addEventListener('submit', function (e) {
+    var f = e.target; e.preventDefault();
+    if (f.id === 'coupon-form') {
+      var code = $('#coupon').value.trim().toUpperCase();
+      if (COUPONS[code]) { state.coupon = code; persistCart(); updateCart(); toast('Kortingscode toegepast'); }
+      else { $('#coupon-msg').textContent = code ? 'Deze code kennen we niet. Probeer PIFORGE10.' : 'Vul eerst een code in.'; }
+    } else if (f.id === 'form-login') {
+      var m = $('#l-mail').value.trim(), p = $('#l-pass').value;
+      if (!mailOk(m)) { $('#l-err').textContent = 'Vul een geldig e-mailadres in.'; return; }
+      if (p.length < 8) { $('#l-err').textContent = 'Een wachtwoord heeft minimaal 8 tekens.'; return; }
+      $('#l-err').textContent = ''; $('#l-pass').value = '';
+      var known = store.get('known', {}); var nm = known[m] || m.split('@')[0];
+      login(nm, m); closeLayers();
+    } else if (f.id === 'form-reg') {
+      var n = $('#r-name').value.trim(), m2 = $('#r-mail').value.trim(), p2 = $('#r-pass').value;
+      if (!n) { $('#r-err').textContent = 'Vul je naam in.'; return; }
+      if (!mailOk(m2)) { $('#r-err').textContent = 'Vul een geldig e-mailadres in.'; return; }
+      if (p2.length < 8) { $('#r-err').textContent = 'Kies een wachtwoord van minimaal 8 tekens.'; return; }
+      $('#r-err').textContent = ''; $('#r-pass').value = '';
+      var kn = store.get('known', {}); kn[m2] = n; store.set('known', kn);
+      login(n, m2); closeLayers();
+    } else if (f.id === 'contact-form') {
+      if (!f.checkValidity()) { f.reportValidity(); return; }
+      var st = $('#form-status'); st.hidden = false;
+      st.textContent = 'Er is niets verzonden: deze demo heeft geen e-mailkoppeling. Zodra die er is, werkt deze knop zoals bedoeld.';
+    }
+  });
+  $('#search').addEventListener('input', function (e) { state.q = e.target.value; renderGrid(); });
+  $('#sort').addEventListener('change', function (e) { state.sort = e.target.value; renderGrid(); });
+
+  // init
+  $('.pay-marks').innerHTML = PAYMENTS.map(function (p) { return '<span class="mark">' + p.name + '</span>'; }).join('');
+  renderChips(); renderGrid(); renderAccount(); updateCart();
+})();
+</script>
+
+</body></html>
